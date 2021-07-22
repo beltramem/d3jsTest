@@ -5,6 +5,12 @@
   
   .axis text {
     font: 10px sans-serif;
+	font-weight: bold;
+  }
+  
+  .degree
+  {
+	  font: 6px sans-serif !important;
   }
   
   .axis line,
@@ -19,8 +25,9 @@
     stroke-dasharray: none;
   }
   
-  .line {
-    fill: none;
-    stroke: orange;
-    stroke-width: 3px;
-  }
+path
+{
+
+	fill : blue;
+	fill-opacity : 0.4;
+}

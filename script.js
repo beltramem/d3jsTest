@@ -1,27 +1,41 @@
-      var width = 960,
-          height = 500,
-          radius = Math.min(width, height) / 2 - 30;
-    
-    var data = [
-      [0, 0.5],
-      [6, 0.2],
-      [Math.random()*24, Math.random()],
-      [Math.random()*24, Math.random()],
-      [Math.random()*24, Math.random()],
-      [Math.random()*24, Math.random()],
-      [Math.random()*24, Math.random()],
-      [Math.random()*24, Math.random()],
-      [Math.random()*24, Math.random()],
-      [Math.random()*24, Math.random()],
-      [Math.random()*24, Math.random()],
-      [Math.random()*24, Math.random()],
-    ]
+var width = 960,
+  height = 500,
+  radius = Math.min(width, height) / 2 - 30;
 
+    var data = [
+
+    ]
+	
+	for(let i=0; i<360; i++)
+	{
+		data.push([i,Math.random()*10]);
+	}
+	for(let i=0; i<360; i++)
+	{
+		data.push([i,Math.random()*10]);
+	}
+	
+function sortFunction(a, b) {
+    if (a[0] === b[0]) {
+        return 0;
+    }
+    else {
+        return (a[0] < b[0]) ? -1 : 1;
+    }
+}
+
+data.sort(sortFunction);
+console.log(data);
 
 // grille
-    var y = _.map(data, _.last);
+	
+    /*var max =Math.max.apply(Math, data.map(function(o) { return o.Value; }))
+	console.log(max);*/
+	//max=1;
+	var y = _.map(data, _.last);
+	
     var max =  Math.max.apply(null, y);
-    max = Math.ceil(max*10)/10;
+	console.log(max);
 
     var angle = d3.scale.linear()
         .domain([0, 24])
@@ -37,10 +51,22 @@
           .append("g")
           .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
+	var order = Math.round(Math.round(100*Math.log(max)/Math.log(10))/100)
+	var ladder = 0
+	if(max/10>1)
+	{
+		ladder=(max)/(1*Math.pow(10,order-1));
+	}
+	else
+	{
+		ladder=max;
+	}
+	var ladder_bar =r.ticks(ladder).slice(0.1);
+	ladder_bar.push(Math.round(max));
     var gr = svg.append("g")
           .attr("class", "r axis")
           .selectAll("g")
-          .data(r.ticks(max*10).slice(1))
+          .data(ladder_bar)
           .enter().append("g");
 
     gr.append("circle")
@@ -50,8 +76,11 @@
         .attr("y", function(d) { return -r(d) - 4; })
         .attr("transform", "rotate(20)")
         .style("text-anchor", "middle")
-        .text(function(d) { return d; });
+        .text(function(d) { 
+			return d;
+		});
 
+	console.log(d3.range(-90, 270, 20));
     var ga = svg.append("g")
           .attr("class", "a axis")
           .selectAll("g")
@@ -106,7 +135,29 @@
 			}
 			
 		});
-		
+	var ga2 = svg.append("g")
+          .attr("class", "a axis")
+          .selectAll("g")
+          .data(d3.range(-90, 270, 15))
+          .enter().append("g")
+          .attr("transform", function(d) {
+            return "rotate(" + d + ")";
+        });
+
+    ga2.append("line")
+          .attr("x2", radius);
+     
+    ga2.append("text")
+		.attr("class", "degree")
+        .attr("x", radius + 6)
+        .attr("dy", ".35em")
+        .style("text-anchor", function(d) { return d < 270 && d > 90 ? "end" : null; })
+        .attr("transform", function(d) {
+            return d < 270 && d > 90 ? "rotate(180 " + (radius + 6) + ",0)" : null;
+        })
+		.text(function(d,i) { 
+			if (i % 3 != 0){return d+90};
+		});
 
     var color = d3.scale.category20();
 
@@ -117,19 +168,18 @@
           .radius(function(d) {
             return r(d[1]);
           });
-		  
-d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/7_OneCatOneNum.csv", function(data) {
 
+		  
   // X scale
   var x = d3.scaleBand()
       .range([0, 2 * Math.PI])    // X axis goes from 0 to 2pi = all around the circle. If I stop at 1Pi, it will be around a half circle
       .align(0)                  // This does nothing ?
-      .domain( data.map(function(d) { return d.Country; }) ); // The domain of the X axis is the list of states.
+      .domain( data.map(function(d) { return d[0]; }) ); // The domain of the X axis is the list of states.
 
   // Y scale
-  var y = d3.scaleRadial()
-      .range([0, radius])   // Domain will be define later.
-      .domain([0, 15000]); // Domain of Y is from 0 to the max seen in the data
+  var y = d3.scale.linear()
+          .domain([0, max])
+          .range([0, radius]); // Domain of Y is from 0 to the max seen in the data
 
   // Add bars
   svg.append("g")
@@ -137,14 +187,13 @@ d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_data
     .data(data)
     .enter()
     .append("path")
-      .attr("fill", "#69b3a2")
+      //.style("stroke-dasharray", ("10,3"))
       .attr("d", d3.arc()     // imagine your doing a part of a donut plot
           .innerRadius(0)
-          .outerRadius(function(d) { return y(d['Value']); })
-          .startAngle(function(d) { return x(d.Country); })
-          .endAngle(function(d) { return x(d.Country) + x.bandwidth(); })
+          .outerRadius(function(d) { return y(d[1]); })
+          .startAngle(function(d) { return x(d[0]); })
+          .endAngle(function(d) { return x(d[0]) + x.bandwidth(); })
           .padAngle(0.01)
           .padRadius(0))
 
-});
 
